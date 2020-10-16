@@ -15,9 +15,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Singular;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Inspect and validate @Builder lombok annotation on a class.
@@ -46,6 +48,23 @@ public class BuilderProcessor extends AbstractClassProcessor {
   @Override
   public boolean isEnabled(@NotNull Project project) {
     return ProjectSettings.isEnabled(project, ProjectSettings.IS_BUILDER_ENABLED);
+  }
+
+  protected boolean possibleToGenerateElementNamed(@Nullable String nameHint, @NotNull PsiClass psiClass,
+                                                   @NotNull PsiAnnotation psiAnnotation) {
+    if (null == nameHint) {
+      return true;
+    }
+
+    boolean possibleMatchFound = Objects.equals(nameHint, psiClass.getName());
+    if (!possibleMatchFound) {
+      possibleMatchFound = Objects.equals(nameHint, BuilderHandler.TO_BUILDER_METHOD_NAME);
+      if (!possibleMatchFound) {
+        final String builderMethodName = getBuilderHandler().getBuilderMethodName(psiAnnotation);
+        possibleMatchFound = Objects.equals(nameHint, builderMethodName);
+      }
+    }
+    return possibleMatchFound;
   }
 
   @NotNull
